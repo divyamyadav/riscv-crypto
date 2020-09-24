@@ -1,0 +1,10 @@
+
+ifeq ($(ZSCRYPTO),1)
+ifeq ($(XLEN),64)
+
+PRESENT_RV64_FILES = present/rv64/present.c
+
+$(eval $(call add_lib_target,rv64present, $(PRESENT_RV64_FILES)))
+
+endif
+endif

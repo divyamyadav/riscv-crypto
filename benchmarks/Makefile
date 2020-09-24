@@ -42,6 +42,9 @@ include sha3/zscrypto_rv64/Makefile.in
 
 include permutation/Makefile.in
 
+include present/rv32/Makefile.in
+include present/rv64/Makefile.in
+
 include test/Makefile.in
 
 all: headers $(TARGETS)

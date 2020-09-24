@@ -1,0 +1,10 @@
+
+ifeq ($(ZSCRYPTO),1)
+ifeq ($(XLEN),32)
+
+PRESENT_RV32_FILES = present/rv32/present.c
+
+$(eval $(call add_lib_target,rv32present, $(PRESENT_RV32_FILES)))
+
+endif
+endif
