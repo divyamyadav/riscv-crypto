@@ -7,19 +7,26 @@ TEX = pdflatex
 
 BUILD_DIR = $(REPO_BUILD)/spec
 
-OPCODES_SCALAR   = $(REPO_HOME)/doc/opcodes-crypto-scalar.tex
-OPCODES_VECTOR   = $(REPO_HOME)/doc/opcodes-crypto-vector.tex
+OPCODES_SCALAR   = $(REPO_HOME)/doc/opcodes-crypto-scalar.adoc
+OPCODES_VECTOR   = $(REPO_HOME)/doc/opcodes-crypto-vector.adoc
 
-SPEC_SCALAR_OUT  = $(BUILD_DIR)/riscv-crypto-spec-scalar.pdf
-SPEC_SCALAR_TOP  = riscv-crypto-spec-scalar.tex
-SPEC_SCALAR_TEX  = $(SPEC_TOP) $(wildcard $(REPO_HOME)/doc/tex/*) $(OPCODES_SCALAR)
+SPEC_SCALAR_IN   = $(REPO_HOME)/doc/adoc/riscv-crypto-scalar.adoc
 
-SPEC_VECTOR_OUT  = $(BUILD_DIR)/riscv-crypto-spec-vector.pdf
-SPEC_VECTOR_TOP  = riscv-crypto-spec-vector.tex
-SPEC_VECTOR_TEX  = $(SPEC_TOP) $(wildcard $(REPO_HOME)/doc/tex/*) $(OPCODES_VECTOR)
+SPEC_SCALAR_PDF  = riscv-crypto-spec-scalar.pdf
+SPEC_VECTOR_PDF  = riscv-crypto-spec-vector.pdf
+
+SPEC_SCALAR_HTML = riscv-crypto-spec-scalar.html
+SPEC_VECTOR_HTML = riscv-crypto-spec-vector.html
 
 SPEC_EXTRA= riscv-crypto-spec.sty $(OPCODES)
 SPEC_COMMIT= $(BUILD_DIR)/spec.commit
+
+.PHONY: $(SPEC_COMMIT)
+$(SPEC_COMMIT):
+	@mkdir -p $(BUILD_DIR)
+	@git rev-parse --abbrev-ref HEAD > ${@}
+	@echo "@" >> ${@}
+	@git log --pretty=format:'%H' -n 1 >> ${@}
 
 $(OPCODES_SCALAR) : $(REPO_HOME)/tools/opcodes-crypto-scalar
 	@mkdir -p $(dir $(OPCODES_SCALAR))
@@ -29,29 +36,15 @@ $(OPCODES_VECTOR) : $(REPO_HOME)/tools/opcodes-crypto-vector
 	@mkdir -p $(dir $(OPCODES_VECTOR))
 	cat $^ | python3 $(REPO_HOME)/bin/parse_opcodes.py -tex > $@
 
-.PHONY: $(SPEC_COMMIT)
-$(SPEC_COMMIT):
-	@mkdir -p $(BUILD_DIR)
-	@git rev-parse --abbrev-ref HEAD > ${@}
-	@echo "@" >> ${@}
-	@git log --pretty=format:'%H' -n 1 >> ${@}
+$(SPEC_SCALAR_PDF) : $(SPEC_SCALAR_IN)
+	asciidoctor-pdf -n -d book -b pdf -o $@ $<
 
-$(SPEC_SCALAR_OUT) : $(SPEC_SCALAR_TEX) $(SPEC_EXTRA) $(SPEC_COMMIT)
-	@mkdir -p $(BUILD_DIR)
-	$(TEX) $(basename $(SPEC_SCALAR_TOP))
-	bibtex   $(basename $(SPEC_SCALAR_TOP))
-	$(TEX) $(basename $(SPEC_SCALAR_TOP))
-	$(TEX) $(basename $(SPEC_SCALAR_TOP))
+$(SPEC_SCALAR_HTML) : $(SPEC_SCALAR_IN)
+	asciidoctor -n -b html -o $@ $<
 
-$(SPEC_VECTOR_OUT) : $(SPEC_VECTOR_TEX) $(SPEC_EXTRA) $(SPEC_COMMIT)
-	@mkdir -p $(BUILD_DIR)
-	$(TEX) $(basename $(SPEC_VECTOR_TOP))
-	bibtex   $(basename $(SPEC_VECTOR_TOP))
-	$(TEX) $(basename $(SPEC_VECTOR_TOP))
-	$(TEX) $(basename $(SPEC_VECTOR_TOP))
+spec-scalar: $(SPEC_SCALAR_PDF) $(SPEC_SCALAR_HTML)
+spec-vector: $(SPEC_VECTOR_PDF) $(SPEC_VECTOR_HTML)
 
-spec-scalar: $(SPEC_SCALAR_OUT)
-spec-vector: $(SPEC_VECTOR_OUT)
 specs: spec-scalar spec-vector
 
 clean:

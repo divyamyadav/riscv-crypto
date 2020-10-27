@@ -7,4 +7,5 @@
 *.pdf
 *.run.xml
 *.toc
+*.html
 opcodes-crypto.tex
